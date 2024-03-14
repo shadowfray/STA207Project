@@ -65,26 +65,80 @@ society.
 
 # Background
 
-The STAR data set focused on the benefits of classroom sizes for
-students and was a study conducted in 1985 to 1989. The study focused on
-students in kindergarten and first through third grade, recording their
-math and reading scores those four years. The target students in this
-study were in seventy nine different schools throughout Tennessee in
-kindergarten, who would be tracked for their adolescent academic lives.
-These schools used in the study were of a variety of types including
-inner city schools, rural schools, urban school and suburban schools.
-Any appropriate school within Tennessee could join the study, allowing
-for a broader scope in what schools were included.
+Known as the Tennesses Student/Teacher Achievement Ratio study (STAR),
+this project focused on the benefits of classroom sizes for students and
+was a study conducted in 1985 to 1989. The study focused on students in
+kindergarten and first through third grade, recording their math and
+reading scores those four years. Data was collected for a wide number of
+factors, from class size, to the education of a given teacher, and many
+more. Further analysis would be conducted over twenty five years to
+examine the long term benefits for these students.
 
-With 7,000 students per grade level, these students were each randomly
-assigned to one of three classroom types: small classrooms (15-17
-students), regular classrooms (22-25 students) and regular classrooms
-with an aide to assist the teacher. Due to the variety of schools and
-locations used the study believes it has allowed for a reasonable
-representation of different incomes and ethnicity among the students
-(Achilles, 6). Similarly to the students teachers were randomly assigned
-classroom types to avoid any issues with teachers specializing in
-teaching particular sizes of classrooms.
+The STAR study sought to further understand the difference in classroom
+size, which until then had confusing and unclear data due to various
+counting methods (Achilles, 2012, p. 1). In performing their own
+experiment the study sought to find a clear and definitive answer to the
+effects of classroom size on the education of their students. In
+conducting this experiment it was hoped that a stronger method for
+teaching children could be discovered to better not only their own
+educational and professional achievements, but also to help fashion a
+more educated society.
+
+# STAR Experimental Design
+
+The target students in this study were in seventy nine different schools
+throughout Tennessee in kindergarten, who would be tracked for their
+adolescent academic lives. These schools used in the study were of a
+variety of types including inner city schools, rural schools, urban
+school and suburban schools. Any appropriate school within Tennessee
+could join the study, allowing for a broader scope in what schools were
+included. Schools had to meet a minimum pupil count in the first year to
+join, allowing for seventy nine schools to be part of the study the
+first year. Due to the variety of schools and locations used the study
+believes it has allowed for a reasonable representation of different
+incomes and ethnicity among the students (Achilles, 2012, p. 6).
+
+The study tracked students starting in kindergarten, with varying
+classroom types prescribed to them by the STAR project through third
+grade. With 7,000 students to begin with, these students were each
+randomly assigned to one of three classroom types: small classrooms
+(15-17 students), regular classrooms (22-25 students) and regular
+classrooms with an aide to assist the teacher. Similarly to the
+students, teachers were randomly assigned classroom types to avoid any
+issues with teachers specializing in teaching particular sizes of
+classrooms. Besides the change to classroom size no other changes were
+made to allow for a normal school environment.
+
+Compared to many similar studies the STAR project sought to focus
+specifically on the size of a given class rather than the pupil-teacher
+ration (PTR). This allows for a clear understanding of how many students
+are involved in a given classroom, for a class with two teachers and
+sixty students will have the same PTR as a class with one student and
+thirty students. The use of classroom size in STAR allows for a more
+direct analysis on the educational benefits of the number of students in
+a given classroom.
+
+It should be noted that while the STAR program began with 7,000 students
+they did not retain all students over the course of the study. As the
+program did not force students to stay in the project students might
+leave throughout the study for a variety of factors such as moving to a
+different city or state, or having to drop out of school. By beginning
+first grade three of the seventy nine schools had dropped from the
+program.
+
+Not only did students leave the program, but because the STAR study
+examined specific schools and not students, any students who joined a
+STAR school were enrolled into the study. These students would not have
+had the controlled classroom size from previous years of the study, and
+could only benefits from the years they were in the study but no note is
+made to exclude them. To compound this issue, at the time this study was
+conducted kindergarten was not mandatory in Tennessee, meaning many
+students joined the program for the first time in first grade and missed
+a whole year of STAR class size.
+
+[Why do we still use the study?]
+
+# Initial Analysis
 
 # Descriptive analysis
 
@@ -187,7 +241,7 @@ ggplot(tot_star_df, aes(x="", y=perc, fill = group)) +
 #What are the missing values?
 miss3 = STAR[which(STAR$FLAGSG1 == 'YES'), ]
 miss3 = miss3[is.na(miss3$g1tmathss), ]
-miss3
+#miss3
 
 #lapply(miss3, table)
 table(miss3$gksurban)
@@ -198,6 +252,15 @@ na_df = data.frame(c(tot_raw_na, tot_star_na))
 colnames(na_df) = c('Percent')
 rownames(na_df) = c('Percentage of Missing Math Values', 'Percentage of missing Math values of enrolled stuents')
 kable(na_df, caption = 'Table 3: Missing Values for STAR and non-STAR students')
+```
+
+### Dropped Schools
+
+3 schools dropped the program by end of kindergarten
+
+```{r}
+dropk = STAR[!is.na(STAR$g1tmathss), ]
+dim(table(dropk$gkschid))
 ```
 
 Dropping this small segment of the data likely won't have any major
@@ -359,23 +422,40 @@ rownames(school_setting_df) = c('Mean', 'Std Dev', 'Q25%', 'Q50%', 'Q75%')
 kable(school_setting_df, caption = 'Table 6: Summary Statistics per School Setting')
 
 sortedSTAR = STARt[order(STARt$g1surban), ]
+lvlinfo = sortedSTAR %>% 
+      arrange(g1surban, g1schid) %>%
+      pull(g1schid) %>%
+      unique()
+
+STARt %>%
+  mutate(g1surban = as.factor(g1surban),
+         g1schid = factor(g1schid, levels = lvlinfo)) %>%
+  ggplot(aes(x = g1schid, y = medn_score, fill = g1surban, color = g1surban)) +
+  geom_boxplot() +
+  xlab('') +
+  ylab('') +
+  ggtitle('Figure XX: Median Score between Schools') +
+  theme(axis.text.x = element_blank())
+  
 
 #Boxplot of median score per school
-ggplot(data = sortedSTAR, aes(x = reorder(g1schid, g1surban),, y = medn_score, color = g1surban)) + 
-  geom_boxplot() + 
-  xlab('1st grade School') +
-  ylab('Average Test score Year 1') +
-  ggtitle('Figure 4: Median Combined Test Score per School Year 1') 
+#ggplot(data = sortedSTAR, aes(x = reorder(g1schid, g1surban),, y = medn_score, #color = g1surban)) + 
+#  geom_boxplot() + 
+#  xlab('1st grade School') +
+#  ylab('Average Test score Year 1') +
+#  ggtitle('Figure 4: Median Combined Test Score per School Year 1') 
 
 #Boxplot of median score per school setting
-ggplot(data = STARt, aes(g1surban, medn_score, color = g1surban)) + 
-  geom_boxplot() + 
-  xlab('1st grade School') +
-  ylab('Average Test score Year 1') +
-  ggtitle('Figure 5: Median combined 1st grade test score by urbanicity')
+#ggplot(data = STARt, aes(g1surban, medn_score, color = g1surban)) + 
+#  geom_boxplot() + 
+#  xlab('1st grade School') +
+#  ylab('Average Test score Year 1') +
+#  ggtitle('Figure 5: Median combined 1st grade test score by urbanicity')
 ```
 
 # Inferential analysis
+
+## Modeling
 
 We will be fitting a fixed effect model for the data given, using the
 class type and school setting as our independent variables and the
@@ -383,6 +463,8 @@ median math score per teacher as our response variable. School setting
 was chosen over individual schools due to issues with unequal variance,
 with school setting allowing us to still examine the effects of
 different schools.
+
+### Model Assumptions
 
 An imbalanced fixed effect model was chosen to be fit to our data, with
 the following equations:
@@ -415,6 +497,8 @@ constraints to keep in mind:
 -   $\sum^a_{i=1} (\alpha\beta)_{ij} = 0, \forall i$
 
 -   $\sum^b_{j=1} (\alpha\beta)_{ij} = 0, \forall j$
+
+### Model Fitting
 
 We will be performing an F-test for both of our variables, class type
 and school setting, to see if they are significant at $\alpha = 0.05$.
@@ -454,39 +538,13 @@ add an interaction term to the model.
 ```{r, warning=F, error=F, message=F, echo = F}
 #Anova(lm(medn_score ~ g1classtype + as.factor(g1schid), data = STARt), type = 2)
 
-STAR_medn_aov = aov(medn_score ~ g1classtype + as.factor(g1surban), data = STARt)
+STAR_medn_aov = aov(medn_score ~ g1classtype + as.factor(g1surban) + g1schid, data = STARt)
 summary(STAR_medn_aov)
 
 #Should we drop interaction term?
 full_model = aov(medn_score ~ g1classtype * as.factor(g1schid), data = STARt)
 red_model = aov(medn_score ~ g1classtype + as.factor(g1schid), data = STARt) 
 anova(red_model, full_model)
-```
-
-## Unequal Medians
-
-Using the Kruskal-Wallis test at significance level 0.05 we can test the
-following hypothesis:
-
-$$
-H_0: \text{Medians between all groups are equal.} \\
-H_1: \text{Not all medians are equal.}
-$$
-
-We perform the Kurskal-Wallis test for both class type and school type.
-For the class type compared to the median score we obtained a
-significant p-value of 0.00117. For the urbanicity compared to the
-median score we obtained a significant p-value of 8.091e-13. Thus we
-found among class types there is a significant difference in the
-difference between the three class types. Similarly a significant
-difference was found between the medians of the various types of
-schools.
-
-```{r, warning=F, error=F, message=F, echo = F}
-#H0: The medians of all groups are equal
-kruskal.test(medn_score ~ g1classtype, data = STARt)
-
-kruskal.test(medn_score ~ g1surban, data = STARt)
 ```
 
 ## Effects Plots & Interaction Plot
@@ -512,33 +570,37 @@ interaction.plot(STARt$g1surban, STARt$g1classtype, STARt$medn_score, main = 'Fi
 
 ## Secondary Question of Interest:
 
-Because we have broken away from our normality assumption (see
-Sensitivity Analysis, Figure 10) and the Kruskal-Wallis rank sum test
-has been reject we will perform a Dunn test at significance level
-$\alpha=0.05$. A Dunn test is used when we have found indication that
-there is a difference between one or more groups, as noted in the
-previous Kruskal-Wallis test. This test we are performing will allow us
-to pinpoint if any particular groups have a higher effect on median math
-scores than another. The Dunn test is of use here due the departure from
-normality experienced from our model, as the Dunn test is a non
-parametric test.
+Let us perform the Tukey Range test at significance level
+$\alpha = 0.05$. The Tukey Range test examines all pairwise differences
+in the means between different levels in a given treatment. This test
+has the following assumptions
 
-We will test the following hypothesis:
+-   $Y_{ijk}$ are independent within their group and between groups
 
-$$
-H_0: \text{There is no difference in median math scores between class types} \\
-H_1: \text{There is a difference in median math scores between class types}
-$$
+-   Each group is normally distributed
 
-Based on our results we can see that small classes in comparison to
-regular classes and regular + aide classes have a higher average median
-score. No strong distinction between regular classes and regular + aide
-classes can be made due to the high p-value.
+-   Homogeneity of variance between the group variances.
 
-```{r, warning=F, error=F, message=F, echo = F}
-dnn_test = dunnTest(medn_score ~ g1classtype, "bonferroni", data = STARt)
-dnn_test
+The Tukey Range test will be used to perform an examination to discover
+if any class type has a higher mean summary score than other class
+types. In particular we will be testing the following null hypothesis,
+$H_0: \mu_i = \mu_{i'}$ where i and i’ are the three levels of the STAR
+class type.
+
+```{r}
+TukeyHSD(aov(medn_score ~ g1classtype, data = STARt))
+
+hist(STARt$medn_score[which(STARt$g1classtype == 'SMALL CLASS')])
+hist(STARt$medn_score[which(STARt$g1classtype == 'REGULAR CLASS')])
+hist(STARt$medn_score[which(STARt$g1classtype == 'REGULAR + AIDE CLASS')])
 ```
+
+~~From the results of this test we can see that there are significant
+differences between small classes and regular classes, as well as
+regular classes with an aide vs small classes in the mean math score of
+those classes. However there does not appear to be such a significant
+difference between regular classes and those regular classes with
+aides.~~
 
 # Sensitivity analysis
 
@@ -628,6 +690,58 @@ plot(STAR_medn_aov, which = 4)
 plot(STAR_medn_aov, which = 5)
 ```
 
+## Unequal Medians: Kruskal Wallis Test
+
+~~Using the Kruskal-Wallis test at significance level 0.05 we can test
+the following hypothesis:~~
+
+$$ 
+H_0: \text{Medians between all groups are equal.} \\ H_1: \text{Not all medians are equal.}
+$$
+
+~~We perform the Kurskal-Wallis test for both class type and school
+type. For the class type compared to the median score we obtained a
+significant p-value of 0.00117. For the urbanicity compared to the
+median score we obtained a significant p-value of 8.091e-13. Thus we
+found among class types there is a significant difference in the
+difference between the three class types. Similarly a significant
+difference was found between the medians of the various types of
+schools.~~
+
+```{r, warning=F, error=F, message=F, echo = F}
+#H0: The medians of all groups are equal
+kruskal.test(medn_score ~ g1classtype, data = STARt)
+
+kruskal.test(medn_score ~ g1surban, data = STARt)
+```
+
+## Dunn Test
+
+~~Because we have broken away from our normality assumption (see
+Sensitivity Analysis, Figure 10) and the Kruskal-Wallis rank sum test
+has been reject we will perform a Dunn test at significance level~~
+$\alpha=0.05$~~. A Dunn test is used when we have found indication that
+there is a difference between one or more groups, as noted in the
+previous Kruskal-Wallis test. This test we are performing will allow us
+to pinpoint if any particular groups have a higher effect on median math
+scores than another. The Dunn test is of use here due the departure from
+normality experienced from our model, as the Dunn test is a non
+parametric test.~~
+
+~~We will test the following hypothesis:~~
+
+$$ H_0: \text{There is no difference in median math scores between class types} \\ H_1: \text{There is a difference in median math scores between class types} $$
+
+~~Based on our results we can see that small classes in comparison to
+regular classes and regular + aide classes have a higher average median
+score. No strong distinction between regular classes and regular + aide
+classes can be made due to the high p-value.~~
+
+```{r, warning=F, error=F, message=F, echo = F}
+dnn_test = dunnTest(medn_score ~ g1classtype, "bonferroni", data = STARt)
+dnn_test
+```
+
 # Discussion
 
 In this project we have explored the effect of classroom size on the
@@ -706,6 +820,8 @@ Research*, *66*(4), 579. <https://doi.org/10.2307/1170654>
 
 Tim. (2022, December 12). *Dunn’s test: Definition*. Statistics How To.
 <https://www.statisticshowto.com/dunns-test/>
+
+<https://stackoverflow.com/questions/66951931/ordering-boxplots-based-on-two-factor-variables-in-x-axis-with-ggplot2>
 
 # Session info {.unnumbered}
 
