@@ -1,6 +1,6 @@
 ---
-title: "Personal Learning: The Effects of Class Size and School Setting on Math Performance in STAR Study"
-author: "(Your name here)"
+title: "Personal Learning: The Effects of Class Size and Urbanicity on 1st Grade Math Performance in STAR Study"
+author: "Benjamin Jewell"
 date: "March 18th 2024"
 output:
   html_document:
@@ -140,6 +140,18 @@ a whole year of STAR class size.
 
 # Initial Analysis
 
+Previous examinations have been made of this data set in an initial
+analysis report. Initial inquiries into the first grade math scores
+looked for a relationship between the class type and specific schools.
+This investigation used an additive two way ANOVA model with no
+interaction. While the model indicated that both class type and school
+ID had an effect on the first grade math scores there were several
+issues with the model used. In investigating model assumptions several
+were found to be broken, namely the normality and equal variance. As
+such any conclusions that this initial analysis report might have made
+are not valid, only serving to familiarize us with the problems we will
+face in this study.
+
 # Descriptive analysis
 
 For our analysis we will be concerning ourselves with five variables, ,
@@ -194,11 +206,14 @@ caption = 'Table 2: Missing Values Summary')
 
 ### STAR Class Representation
 
-To ensure that all class types are represented it should be ensured that
-all schools included in our investigation have all class types present.
-Unfortunately there are four schools missing at least one class type and
-will be dropped from our data, specifically schools 244728, 244736,
-244796 and 244839.
+As we are looking at the effects of each class type on all given schools
+we want to guarantee that all schools have all three class types
+present. If one or more class types are missing we cannot have the full
+picture of the effects on math scores at that particular school, we will
+be missing the full picture. As such schools that do not have all three
+class types present should be dropped from our investigation. It was
+found that four such schools exist, specifically schools with ID 244728,
+244736, 244796 and 244839
 
 ```{r, warning=F, error=F, message=F, echo = F}
 classlist = STAR %>%
@@ -207,19 +222,19 @@ classlist = STAR %>%
 
 #TODO: Hide this table
 t = table(classlist$g1schid)
-#data.frame(t[which(t != 3)])
+data.frame(t[which(t != 3)])
 
 #We will drop these 4 schools later when we assemble the STARt data frame
 ```
 
 ### Analysis of Missing Values
 
-Looking at the math scores it can be noted that 43.12% of these values
-are missing. However upon investigating, a majority of these missing
-values are from students who have left the STAR program at this point.
-Removing these non-STAR students from our data we can find that this
-reduces the number of missing values to 3.38%, a much more manageable
-proportion.
+Looking at the math scores it can be noted that 43.12% (3043 students)
+of these values are missing. However upon investigating, a majority of
+these missing values are from students who have left the STAR program by
+the first grade. Removing these non-STAR students from our data we can
+find that this reduces the number of missing values to 3.38% (256
+students), a much smaller proportion of the data.
 
 ```{r, echo = F}
 #How many math scores are NA out of the total?
@@ -228,8 +243,19 @@ tot_raw_na = sum(is.na(STAR$g1tmathss)) / length(STAR$g1tmathss) #BAD!
 #Alternatively using the STARGS1 Flag 
 tot_star_na = sum(is.na(STAR$g1tmathss[which(STAR$FLAGSG1 == 'YES')])) / length(STAR$g1tmathss[which(STAR$FLAGSG1 == 'YES')])
 
+
+#Number of non-NA values in g1math
+not_na = 1 - tot_raw_na
+#Number of NA values in g1math that are enrolled in star (FLAGSG1 = T)
+star_na = sum(is.na(STAR$g1tmathss[which(STAR$FLAGSG1 == 'YES')])) / length(STAR$g1tmathss)
+#Number of NA values in g1math NOT enrolled in star
+not_star_na = tot_raw_na - star_na 
+
+
+#Piechart of missing proportions
 tot_star_df = data.frame(group = c('Missing Value in STAR', 'Existing Values in STAR', 'Missing Values not in STAR'),
-  perc = c(tot_star_na, 1 - tot_star_na - tot_raw_na, tot_raw_na))
+  perc = c(star_na, not_na, not_star_na))
+
 
 #Pie chats for data
 ggplot(tot_star_df, aes(x="", y=perc, fill = group)) +
@@ -237,6 +263,16 @@ ggplot(tot_star_df, aes(x="", y=perc, fill = group)) +
   coord_polar("y", start=0) +
   xlab('') + ylab('') +
   ggtitle('Figure XX: Proportion of Missing 1st Grade Math Scores')
+
+#Table of values
+na_df = data.frame(c(tot_raw_na, tot_star_na))
+colnames(na_df) = c('Percent')
+rownames(na_df) = c('Percentage of Missing Math Values', 'Percentage of missing Math values of enrolled stuents')
+kable(na_df, caption = 'Table 3: Missing Values for STAR and non-STAR students')
+```
+
+```{r}
+#MISSING VALUES EXAMINATION
 
 #What are the missing values?
 miss3 = STAR[which(STAR$FLAGSG1 == 'YES'), ]
@@ -246,36 +282,39 @@ miss3 = miss3[is.na(miss3$g1tmathss), ]
 #lapply(miss3, table)
 table(miss3$gksurban)
 table(miss3$g1surban)
-
-#Table of values
-na_df = data.frame(c(tot_raw_na, tot_star_na))
-colnames(na_df) = c('Percent')
-rownames(na_df) = c('Percentage of Missing Math Values', 'Percentage of missing Math values of enrolled stuents')
-kable(na_df, caption = 'Table 3: Missing Values for STAR and non-STAR students')
 ```
 
-### Dropped Schools
-
-3 schools dropped the program by end of kindergarten
-
-```{r}
-dropk = STAR[!is.na(STAR$g1tmathss), ]
-dim(table(dropk$gkschid))
-```
+### Dropping Data Points
 
 Dropping this small segment of the data likely won't have any major
 effect, however to be sure we can looking into the number of missing
 values per school. As seen in Figure 1 most school have five or less
 missing values, with one outlying school missing twenty eight values.
-For this particular school however these missing values only make up
-22.40% of the students here. Since much of the data from this school
-remains we will choose to keep this school in the study rather than
-dropping all values from it.
+For this outlying school however these missing values only make up
+22.40% of the students here. By comparison this is a large portion of
+missing students, however even with 28 missing students there are still
+97 students enrolled in the program. Considering that the STAR program
+required a minimum of 57 students to be part of the project this reduced
+number is still well above the threshold.
 
 Due to these findings we will chose to drop any student who has a
-missing value for their 1st grade math score as this will eliminate all
-non-STAR students and only a minuscule fraction of STAR students who are
-missing math scores.
+missing value for their 1st grade math score. A majority of the students
+dropped from our study will be those who are no longer enrolled in the
+STAR program by first grade, reducing our missing values from making up
+43.12% of our data to just 3.38% of the data (Table 3).
+
+As seen in Figure AA few schools are missing more than 5 values, and we
+have addressed the number of students remaining at school with 28
+missing students (School 168211). Even if all remaining schools are
+missing the maximum number of values 9 students, as seen in Figure AA,
+and began with the minimum number of students per STAR protocol (57
+students), then 48 students would remain at that location. This extreme
+example highlights that in dropping these remaining students with
+missing math scores would not impact our study significantly.
+
+With these considerations in mind we will choose to only examine
+students who have math scores in the first grade, and drop any students
+who are missing first grade math scores.
 
 ```{r, warning=F, error=F, message=F, echo = F}
 #Do any schools have more NA values than others?
@@ -285,23 +324,37 @@ na_star = STAR[which(STAR$FLAGSG1 == 'YES'),] %>%
 
 hist(na_star$na_count[which(is.na(na_star$g1tmathss))], breaks = 1:30,
      xlab = 'Frequecy of NA values',
-     main = 'Figure 1: Frequency of missing values among Schools')
+     main = 'Figure AA: Frequency of missing values among Schools')
 
-#Notice one school has 28 missing, out of how many total? What %%?
-miss28_proportion = 28 / length(STAR$g1schid[which(STAR$g1schid == na_star$g1schid[which(na_star$na_count == 28)])])
+table(na_star$na_count[which(is.na(na_star$g1tmathss))])
+
+#Notice one school has 28 missing, out of 125
+miss28_proportion = 28 / length(STAR$g1schid[which(STAR$g1schid == 168211)])
+schid168211 = STAR[which(STAR$g1schid == 168211), ]
+
+#Seven students removed from eacher teacher???
+#table(schid168211$g1tchid)
+#table(schid168211$g1tchid[is.na(schid168211$g1tmathss)])
 
 ```
 
 ## Aggregated Teacher Statistic
 
-Due of the high correlation between students in the same class we
-instead chose to use the median as a summary statistic for each teacher.
-Similar to how all students in a class are highly correlated since the
-way a teacher educates is likely the same between different classes we
-will calculate the median for each teacher to avoid potential
-correlation. The median was chosen as our statistic as previous
-investigations showed using the mean would lead us to a model that
-deviated from our key model assumptions.
+In examining the 1st grade math scores between students we cannot simply
+use the individual scores due to high correlation between students in a
+single class. Because they are taught in the same setting and in the
+same manner a high correlation develops between them, instead the median
+score of such a class could be considered to deal with this problem. To
+take the problem a step further, students taught by the same teacher are
+likely to have issues of correlation as well since teaching style likely
+only differs so much between classes taught by the same educator.
+
+Taking this all into consideration we will be using the median score of
+all students taught by a single teacher as our statistic of interest in
+this study. The median was chosen over the mean as it will not be
+effected by outliers, and in previous investigations it was found that
+using the mean results in a model that deviates from key model
+assumptions.
 
 ```{r, warning=F, error=F, message=F, echo = F}
 STARt = STAR %>% 
@@ -437,7 +490,6 @@ STARt %>%
   ggtitle('Figure XX: Median Score between Schools') +
   theme(axis.text.x = element_blank())
   
-
 #Boxplot of median score per school
 #ggplot(data = sortedSTAR, aes(x = reorder(g1schid, g1surban),, y = medn_score, #color = g1surban)) + 
 #  geom_boxplot() + 
@@ -458,11 +510,11 @@ STARt %>%
 ## Modeling
 
 We will be fitting a fixed effect model for the data given, using the
-class type and school setting as our independent variables and the
-median math score per teacher as our response variable. School setting
-was chosen over individual schools due to issues with unequal variance,
-with school setting allowing us to still examine the effects of
-different schools.
+class type, school ID and school urbanicity as our independent variables
+and the median math score per teacher as our response variable. In using
+the school ID, the effects of specific schools can be accounted for,
+while the urbanicity of the school helps see general effects of school
+setting beyond the very specific school ID.
 
 ### Model Assumptions
 
@@ -485,19 +537,6 @@ In this case our variables are:
 
 -   $\epsilon_{ijk}$ : The random error for entry (i,j,k).
 
-With our fixed effects model we will have the following assumptions and
-constraints to keep in mind:
-
--   $\sum \alpha_i = 0$
-
--   $\{\epsilon_{ijk}\} \sim \text{ iid } N(0, \sigma^2)$
-
--   $\sum_i \alpha_i = \sum_j \beta_j = 0$
-
--   $\sum^a_{i=1} (\alpha\beta)_{ij} = 0, \forall i$
-
--   $\sum^b_{j=1} (\alpha\beta)_{ij} = 0, \forall j$
-
 ### Model Fitting
 
 We will be performing an F-test for both of our variables, class type
@@ -516,11 +555,10 @@ H_0: \beta_j = 0 \text{ }\forall j. \\
 H_1: \text{Not all }\beta_j\text{ equal zero.}
 $$
 
-As we can our tests return a p-value of 8.83e-05 and 1.36e-15
-respectively, indicating that both factors of school setting and
-classroom have main effects. Note that this test assumes normality from
-the model, which we will discuss further in the sensitivity section of
-this report.
+As we can our tests return a p-value of XXX, XXX, XXX respectively,
+indicating that both factors of school setting and classroom have main
+effects. Note that this test assumes normality from the model, which we
+will discuss further in the sensitivity section of this report.
 
 A test for interaction terms was also performed at significant level
 $\alpha = 0.05$, testing the following hypothesis:
@@ -530,7 +568,7 @@ H_0: (\alpha\beta)_{ij} = 0 \\
 H_1: \text{not all } (\alpha\beta)_{ij} \text{ are zero.}
 $$
 
-Via the F-test we report a p-value of 0.3725, indicating that we fail to
+Via the F-test we report a p-value of XXX, indicating that we fail to
 reject the null hypothesis. As such there is no interaction between
 classroom type and school setting and we can safely ignore the need to
 add an interaction term to the model.
@@ -538,12 +576,14 @@ add an interaction term to the model.
 ```{r, warning=F, error=F, message=F, echo = F}
 #Anova(lm(medn_score ~ g1classtype + as.factor(g1schid), data = STARt), type = 2)
 
-STAR_medn_aov = aov(medn_score ~ g1classtype + as.factor(g1surban) + g1schid, data = STARt)
+STAR_medn_aov = aov(medn_score ~ g1classtype + as.factor(g1surban) + as.factor(g1schid), data = STARt)
 summary(STAR_medn_aov)
 
+#STAR_medn_aov = lme4::lmer(medn_score ~ g1classtype + (1|as.factor(STARt$g1schid)), data = STARt)
+
 #Should we drop interaction term?
-full_model = aov(medn_score ~ g1classtype * as.factor(g1schid), data = STARt)
-red_model = aov(medn_score ~ g1classtype + as.factor(g1schid), data = STARt) 
+full_model = aov(medn_score ~ g1classtype * as.factor(g1schid) * as.factor(g1surban), data = STARt)
+red_model = aov(medn_score ~ g1classtype + as.factor(g1schid) + as.factor(g1surban), data = STARt) 
 anova(red_model, full_model)
 ```
 
@@ -560,6 +600,8 @@ schools having a significant decrease in median math scores compared to
 the other school locations. Finally an interaction plot is constructed
 (Figure 8), allowing us to see that there is little interaction between
 school setting and class type, as our F-test previously confirmed.
+
+[WHY NO SCHOOL ID PLOT??]
 
 ```{r, warning=F, error=F, message=F, echo = F}
 #Effects & Interaction Plots
@@ -662,7 +704,7 @@ variance is a key assumption in our fixed effects model this test
 indicates we need not worry about such depatures.
 
 ```{r, warning=F, error=F, message=F, echo = F}
-leveneTest(medn_score ~ g1classtype * as.factor(g1surban), STARt)
+leveneTest(medn_score ~ g1classtype * as.factor(g1surban) * as.factor(g1schid), STARt)
 ```
 
 ## Independence
@@ -713,6 +755,8 @@ schools.~~
 kruskal.test(medn_score ~ g1classtype, data = STARt)
 
 kruskal.test(medn_score ~ g1surban, data = STARt)
+
+kruskal.test(medn_score ~ as.factor(g1schid), data = STARt)
 ```
 
 ## Dunn Test
