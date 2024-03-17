@@ -26,6 +26,7 @@ library(FSA)
 library(knitr)
 
 STAR = read.spss("../STAR_Students.sav", to.data.frame = T)
+STAR$g1schid = as.factor(STAR$g1schid)
 ```
 
 ------------------------------------------------------------------------
@@ -34,7 +35,7 @@ STAR = read.spss("../STAR_Students.sav", to.data.frame = T)
 
 # Abstract
 
-The original STAR study worked to find if the size of a classroom for
+~~The original STAR study worked to find if the size of a classroom for
 kindergartners through first graders had an impact on their future
 academic performance. In this paper we will study if the classroom size
 and setting of the school impacts their math test score. The median math
@@ -44,14 +45,14 @@ deviations from the normality assumption were detected so non-parametric
 tests were employed. Both classroom size and school setting were found
 to be impactful to first grade math scores, and among class types it was
 concluded that small classrooms lead to higher math scores compared to
-other class types.
+other class types.~~
 
 # Introduction
 
 This study is seeking to answer two questions: Is any differences in
 math scaled scores in 1st grade across class types? As well as, which
 class type is associated with the highest math scaled scores in 1st
-grade?One can likely believe anecdotally that in a class packed with
+grade? One can likely believe anecdotally that in a class packed with
 students and a sole teacher the quantity of education is likely
 diminished compared a class where students get individual attention.
 This study seeks to examine this belief, in comparing both small classes
@@ -62,6 +63,8 @@ this study we can hope to discover a better way to educate students to
 ensure their academic success. Not only can this help their future
 careers and opportunities, but also leads to a more educated future for
 society.
+
+[What is OUR question? What are our assumptions?]
 
 # Background
 
@@ -102,7 +105,7 @@ The study tracked students starting in kindergarten, with varying
 classroom types prescribed to them by the STAR project through third
 grade. With 7,000 students to begin with, these students were each
 randomly assigned to one of three classroom types: small classrooms
-(15-17 students), regular classrooms (22-25 students) and regular
+(13-17 students), regular classrooms (22-25 students) and regular
 classrooms with an aide to assist the teacher. Similarly to the
 students, teachers were randomly assigned classroom types to avoid any
 issues with teachers specializing in teaching particular sizes of
@@ -151,6 +154,8 @@ were found to be broken, namely the normality and equal variance. As
 such any conclusions that this initial analysis report might have made
 are not valid, only serving to familiarize us with the problems we will
 face in this study.
+
+[How did we mess with that data here? (Also dropped NAs)
 
 # Descriptive analysis
 
@@ -202,30 +207,7 @@ caption = 'Table 2: Missing Values Summary')
 
 ```
 
-## Data Abnormalities
-
-### STAR Class Representation
-
-As we are looking at the effects of each class type on all given schools
-we want to guarantee that all schools have all three class types
-present. If one or more class types are missing we cannot have the full
-picture of the effects on math scores at that particular school, we will
-be missing the full picture. As such schools that do not have all three
-class types present should be dropped from our investigation. It was
-found that four such schools exist, specifically schools with ID 244728,
-244736, 244796 and 244839
-
-```{r, warning=F, error=F, message=F, echo = F}
-classlist = STAR %>%
-  group_by(g1schid, g1classtype) %>%
-  summarise(classnum = 1)
-
-#TODO: Hide this table
-t = table(classlist$g1schid)
-data.frame(t[which(t != 3)])
-
-#We will drop these 4 schools later when we assemble the STARt data frame
-```
+## Missing Values and STAR Project Inconsistencies
 
 ### Analysis of Missing Values
 
@@ -271,70 +253,87 @@ rownames(na_df) = c('Percentage of Missing Math Values', 'Percentage of missing 
 kable(na_df, caption = 'Table 3: Missing Values for STAR and non-STAR students')
 ```
 
+### Class Size Inconsistencies
+
+In our examination we will want to investigate the data to ensure that
+it complies with the definitions set up in the project. As explained
+STAR Experimental Section, the size of a small class is defined as a
+class with 13 to 17 students, while the other classes contain 22 to 25
+students. In examining the data we can find that a number of classes
+deviate from these assumptions. In total only 89.14% of classes defined
+as small are actually small, and only 58.50% of regular sized classes
+are actually regular. To ensure that proper adherence to the
+experimental design is met those classes that fail to adhere to their
+initial definition will be removed from our investigation.
+
 ```{r}
-#MISSING VALUES EXAMINATION
+STARsmall = filter(STAR, (g1classtype == 'SMALL CLASS' & g1classsize %in% 13:17))
+STARreg = filter(STAR, (g1classtype != 'SMALL CLASS' & g1classsize %in% 22:25))
 
-#What are the missing values?
-miss3 = STAR[which(STAR$FLAGSG1 == 'YES'), ]
-miss3 = miss3[is.na(miss3$g1tmathss), ]
-#miss3
+nrow(STARsmall) / nrow(filter(STAR, g1classtype == 'SMALL CLASS'))
+nrow(STARreg) / nrow(filter(STAR, g1classtype != 'SMALL CLASS'))
+```
 
-#lapply(miss3, table)
-table(miss3$gksurban)
-table(miss3$g1surban)
+### Consistent Class Type
+
+To ensure that students are complying with the class type they have been
+assigned to, it must be checked that students are enrolled in the same
+size of class across the two years we are examining. Any students who
+deviate from this requirement will have a mixed education and cannot be
+clearly placed in one education type or another. As such we will drop
+these mixed students from our study.
+
+There are two major notes to in doing this that must be stated. First,
+this process will remove any students not enrolled in first grade or
+kindergarten. As we are looking at the effects of a given class type
+across both kindergarten and first grade there appears to be little
+issue here. It should be noted however that in Tennessee when the study
+began kindergarten was not mandated, thus limiting the scope of this
+study to kids whose parents sent them to kindergarten. Secondly, after
+the first year of the STAR study decided to modify their experiment in
+the following manner: Half of the students in the 'regular' class size
+were randomly assigned to 'regular + aide' class size, while half of the
+'regular + aide' students were randomly selected to be moved to the
+'regular' class size. Due to this deviation from the initial study
+designs we will have to drop these students as they deviate from our own
+investigation on the effects of subsequent class sizes.
+
+```{r}
+#Our new reduced data set
+STARc = filter(STAR, (g1classtype == 'SMALL CLASS' & g1classsize %in% 13:17) | (g1classtype != 'SMALL CLASS' & g1classsize %in% 22:25))
+STARc = filter(STARc, g1classtype == gkclasstype)
 ```
 
 ### Dropping Data Points
 
-Dropping this small segment of the data likely won't have any major
-effect, however to be sure we can looking into the number of missing
-values per school. As seen in Figure 1 most school have five or less
-missing values, with one outlying school missing twenty eight values.
-For this outlying school however these missing values only make up
-22.40% of the students here. By comparison this is a large portion of
-missing students, however even with 28 missing students there are still
-97 students enrolled in the program. Considering that the STAR program
-required a minimum of 57 students to be part of the project this reduced
-number is still well above the threshold.
+In setting our caveats for our investigation we can see that this
+resulted in the side effect of cutting down the vast majority of missing
+values from our 1st grade math scores. Where before 43.13% of our data
+points were missing values (Table 3), we have reduced the number of
+missing points down to just 1.5% of our data. This is half the number of
+missing data points we achieve by not including students not enrolled in
+the STAR program in first grade. As seen in Figure AA few schools are
+missing more than one value, with the most missing being four values.
 
-Due to these findings we will chose to drop any student who has a
-missing value for their 1st grade math score. A majority of the students
-dropped from our study will be those who are no longer enrolled in the
-STAR program by first grade, reducing our missing values from making up
-43.12% of our data to just 3.38% of the data (Table 3).
-
-As seen in Figure AA few schools are missing more than 5 values, and we
-have addressed the number of students remaining at school with 28
-missing students (School 168211). Even if all remaining schools are
-missing the maximum number of values 9 students, as seen in Figure AA,
-and began with the minimum number of students per STAR protocol (57
-students), then 48 students would remain at that location. This extreme
-example highlights that in dropping these remaining students with
-missing math scores would not impact our study significantly.
-
-With these considerations in mind we will choose to only examine
-students who have math scores in the first grade, and drop any students
-who are missing first grade math scores.
+As the proportion of missing students makes up less than 2% of our data
+set we can be assured that we have enough remaining students per school
+to continue with our study. As such the remaining 1.5% of students with
+missing 1st grade math scores will be dropped from the study we are
+conducting.
 
 ```{r, warning=F, error=F, message=F, echo = F}
+#How many missing values now?
+sum(is.na(STARc$g1tmathss)) / length(STARc$g1tmathss)
+
 #Do any schools have more NA values than others?
-na_star = STAR[which(STAR$FLAGSG1 == 'YES'),] %>%
+na_star = STARc %>%
   group_by(g1schid, g1tmathss) %>%
   summarize(na_count = sum(is.na(g1tmathss)))
 
+#Histogram of missing values
 hist(na_star$na_count[which(is.na(na_star$g1tmathss))], breaks = 1:30,
      xlab = 'Frequecy of NA values',
      main = 'Figure AA: Frequency of missing values among Schools')
-
-table(na_star$na_count[which(is.na(na_star$g1tmathss))])
-
-#Notice one school has 28 missing, out of 125
-miss28_proportion = 28 / length(STAR$g1schid[which(STAR$g1schid == 168211)])
-schid168211 = STAR[which(STAR$g1schid == 168211), ]
-
-#Seven students removed from eacher teacher???
-#table(schid168211$g1tchid)
-#table(schid168211$g1tchid[is.na(schid168211$g1tmathss)])
 
 ```
 
@@ -357,17 +356,18 @@ using the mean results in a model that deviates from key model
 assumptions.
 
 ```{r, warning=F, error=F, message=F, echo = F}
-STARt = STAR %>% 
+STARt = STARc %>% 
+  group_by(g1tchid, g1classtype, g1schid, g1surban) %>%
+  drop_na(g1tmathss) %>%
+  summarize(medn_score = median(g1tmathss, na.rm = T),
+            )
+minicdat = STARc %>% 
   group_by(g1tchid, g1classtype, g1schid, g1surban) %>%
   drop_na(g1tmathss) %>%
   summarize(medn_score = median(g1tmathss, na.rm = T))
 
-#Drop our 4 schools missing all data types
-STARt = STARt[-which(STARt$g1schid %in% c(244728, 244736, 244796, 244839)),]
-
 STARt$g1schid = as.factor(STARt$g1schid)
 STARt$g1tchid = as.factor(STARt$g1tchid)
-
 ```
 
 ### Median Math Score: Summary Statistics
@@ -498,23 +498,52 @@ STARt %>%
 #  ggtitle('Figure 4: Median Combined Test Score per School Year 1') 
 
 #Boxplot of median score per school setting
-#ggplot(data = STARt, aes(g1surban, medn_score, color = g1surban)) + 
-#  geom_boxplot() + 
-#  xlab('1st grade School') +
-#  ylab('Average Test score Year 1') +
-#  ggtitle('Figure 5: Median combined 1st grade test score by urbanicity')
+ggplot(data = STARt, aes(g1surban, medn_score, color = g1surban)) + 
+  geom_boxplot() + 
+  xlab('1st grade School') +
+  ylab('Average Test score Year 1') +
+  ggtitle('Figure XX: Median combined 1st grade test score by urbanicity')
+```
+
+### Examining distribution of Urbanicity and Schools
+
+It should be noted that in adhering to the caveats of our study the size
+of our dataset has been trimmed down to a little over half the initial
+data. As such when examining the median scores of a given teacher we
+should ensure that there is enough data to move forward. Below two plots
+have been made to highlight the portion of students in each treatment
+when using school ID compared to urbanicity as our variable to represent
+location. As we can see not all levels of class size can be found in
+each school (Figure XY). Comparatively when representing school location
+by urbanicity we have a minimum of five units per treatment, though it
+should be noted that there is much higher proportion of rural classes
+(Figure XZ).
+
+```{r}
+barplot(table(STARt$g1classtype, STARt$g1schid), 
+        main = 'Figure XY:Treatments of School ID and Class Size')
+barplot(table(STARt$g1classtype, STARt$g1surban),
+        main = 'Figure XZ: Treatments of Urbanicity and Class Size')
 ```
 
 # Inferential analysis
 
 ## Modeling
 
+In beginning this analysis during our initial analysis report it was
+directed to use a model that accounted for class type and individual
+schools as factors of our model. In our analysis of the data however we
+have seen that to ensure that all treatments are represented in our
+model the use of urbanicity will surplant the use of school ID. Because
+each school belongs to a single type of urbanicity there exists a
+straight forward mapping between individual schools and the level of
+their urbanicity. In using the the urbanicity of the school readers of
+this report may be able to gauge how effective class size can be for
+their specific school.
+
 We will be fitting a fixed effect model for the data given, using the
-class type, school ID and school urbanicity as our independent variables
-and the median math score per teacher as our response variable. In using
-the school ID, the effects of specific schools can be accounted for,
-while the urbanicity of the school helps see general effects of school
-setting beyond the very specific school ID.
+class type and school urbanicity as our independent variables and the
+median math score per teacher as our response variable.
 
 ### Model Assumptions
 
@@ -530,10 +559,13 @@ In this case our variables are:
 
 -   $\mu_{..}$ : Mean response across all indexes.
 
--   $\alpha_i$ : The main effects of the fixed variable school location
-    setting.
+-   $\alpha_i$ : The main effects of the fixed variable school
+    urbanicity.
 
 -   $\beta_j$ : The main effects of the fixed variable class type.
+
+-   $(\alpha\beta)_{ij}$ : The interaction term between class type and
+    school urbanicity.
 
 -   $\epsilon_{ijk}$ : The random error for entry (i,j,k).
 
@@ -568,23 +600,23 @@ H_0: (\alpha\beta)_{ij} = 0 \\
 H_1: \text{not all } (\alpha\beta)_{ij} \text{ are zero.}
 $$
 
-Via the F-test we report a p-value of XXX, indicating that we fail to
-reject the null hypothesis. As such there is no interaction between
-classroom type and school setting and we can safely ignore the need to
-add an interaction term to the model.
+Via the F-test we report a p-value of XXX, indicating that we reject the
+null hypothesis. As such there is interaction between classroom type and
+school urbanicity. That is, certain school urbanicities combined with
+certain class sizes will have influence on the median math scores.
 
 ```{r, warning=F, error=F, message=F, echo = F}
-#Anova(lm(medn_score ~ g1classtype + as.factor(g1schid), data = STARt), type = 2)
 
-STAR_medn_aov = aov(medn_score ~ g1classtype + as.factor(g1surban) + as.factor(g1schid), data = STARt)
+STARaov.m1 = aov(medn_score ~ g1classtype * g1surban, data = STARt)
+STARaov.m2 = aov(medn_score ~ g1classtype + g1surban, data = STARt)
+STARaov.m3 = aov(medn_score ~ g1schid, data = STARt)
+
+anova(STARaov.m1, STARaov.m2) #Pr = 0.18, Use simpler model
+anova(STARaov.m2, STARaov.m3) # Pr < 0.05, Use more complex model
+
+#Our final model
+STAR_medn_aov = aov(medn_score ~ g1classtype * g1surban, data = STARt)
 summary(STAR_medn_aov)
-
-#STAR_medn_aov = lme4::lmer(medn_score ~ g1classtype + (1|as.factor(STARt$g1schid)), data = STARt)
-
-#Should we drop interaction term?
-full_model = aov(medn_score ~ g1classtype * as.factor(g1schid) * as.factor(g1surban), data = STARt)
-red_model = aov(medn_score ~ g1classtype + as.factor(g1schid) + as.factor(g1surban), data = STARt) 
-anova(red_model, full_model)
 ```
 
 ## Effects Plots & Interaction Plot
@@ -600,8 +632,6 @@ schools having a significant decrease in median math scores compared to
 the other school locations. Finally an interaction plot is constructed
 (Figure 8), allowing us to see that there is little interaction between
 school setting and class type, as our F-test previously confirmed.
-
-[WHY NO SCHOOL ID PLOT??]
 
 ```{r, warning=F, error=F, message=F, echo = F}
 #Effects & Interaction Plots
@@ -630,36 +660,48 @@ $H_0: \mu_i = \mu_{i'}$ where i and i’ are the three levels of the STAR
 class type.
 
 ```{r}
-TukeyHSD(aov(medn_score ~ g1classtype, data = STARt))
+tkhsd = TukeyHSD(aov(medn_score ~ g1classtype, data = STARt))
+tkhsd
 
-hist(STARt$medn_score[which(STARt$g1classtype == 'SMALL CLASS')])
-hist(STARt$medn_score[which(STARt$g1classtype == 'REGULAR CLASS')])
-hist(STARt$medn_score[which(STARt$g1classtype == 'REGULAR + AIDE CLASS')])
+plot(tkhsd)
+
+shapiro.test(minicdat$medn_score[which(minicdat$g1classtype  == 'SMALL CLASS')])
+shapiro.test(minicdat$medn_score[which(minicdat$g1classtype  == 'REGULAR CLASS')])
+shapiro.test(minicdat$medn_score[which(minicdat$g1classtype  == 'REGULAR + AIDE CLASS')])
 ```
 
-~~From the results of this test we can see that there are significant
-differences between small classes and regular classes, as well as
-regular classes with an aide vs small classes in the mean math score of
-those classes. However there does not appear to be such a significant
-difference between regular classes and those regular classes with
-aides.~~
+In examining the difference in mean between regular classes and small
+classes with a p-value less than 0.01 there was a negative difference in
+means, indicating we reject our null hypothesis. Between regular classes
+and small classes a p-value of 0.39 was reported, while between
+regular + aide and regular classes there was a p-value of 0.11. Thus in
+both these cases we fail to reject our null hypothesis.
+
+Among students that participated in the same classroom setting both
+years, students who are a part of smaller classes have higher first
+grade math scores than those in a regular setting. Due to a lack of
+significance no comparison can be made between regular and regular +
+aide classes or between small classes and regular + aide classes.
 
 # Sensitivity analysis
+
+## ANOVA Assumptions
 
 Let us test the various assumptions of our model to ensure that we do
 not deviate away from them.
 
-## Normality in Residuals
+### Normality in Residuals
 
 One assumption of particular note here is that of normality. In
-examining our residuals vs fitted plot (figure 9) we can see that there
+examining our residuals vs fitted plot (figure XX) we can see that there
 is little pattern to the data points, indicating no major issues with
 variance or mean. However in examining our residuals via histogram and
-qqplot (Figure 10, Figure 11) we can see that there is a deviation from
+qqplot (Figure XX, Figure XX) we can see that there is a deviation from
 normality. Our histogram is right skewed, one piece of evidence of
 departure from normality. This is further confirmed by performing a
 Shapiro-Wilks test. At significant level 0.05 the test rejects our null
-hypothesis, concluding that our data is non-normal.
+hypothesis with a p-value of 0.04, concluding that our data is
+non-normal.
 
 While the breaking of the normality of assumption is something to take
 note of, it is not as a big of a concern as previously led to believe.
@@ -669,22 +711,16 @@ fixed-effects model F-test" (Glass et al, 273). Because this skewness is
 not particularly strong we can move forward knowing this departure of
 normality will not strong effect our F-tests.
 
-This effect can be seen between the agreement in our effects and
-interaction plots (Figures 6, 7, 8), as well as the Kruskal-Wallis test
-with the F-tests. Not only does Glass et al. support us moving forward
-with this investigation, the use of non-parametric tests are also
-possible and employed in our study.
-
 ```{r, warning=F, error=F, message=F, echo = F}
-plot(STAR_medn_aov, which = 1, main = 'Figure 9: Median Model Residuals vs Fitted plot')
-hist(residuals(STAR_medn_aov), main = 'Figure 10: Histogram of Median Model Residuals', xlab = 'Residuals')
-qqnorm(residuals(STAR_medn_aov), main = 'Figure 11: QQplot of Median Model')
+plot(STAR_medn_aov, which = 1, main = 'Figure XX: Median Model Residuals vs Fitted plot')
+hist(residuals(STAR_medn_aov), main = 'Figure XX: Histogram of Median Model Residuals', xlab = 'Residuals')
+qqnorm(residuals(STAR_medn_aov), main = 'Figure XX: QQplot of Median Model')
 qqline(residuals(STAR_medn_aov))
 
-shapiro.test(residuals(STAR_medn_aov)) #P > 0.05, so we can assume normality
+shapiro.test(residuals(STAR_medn_aov)) #P > 0.05 = Normality
 ```
 
-## Levene Test for Equal Variance
+### Levene Test for Equal Variance
 
 Testing for equal variance among groups, a Levene Test was performed at
 significance level 0.05. We will be testing if the variance among
@@ -704,10 +740,10 @@ variance is a key assumption in our fixed effects model this test
 indicates we need not worry about such depatures.
 
 ```{r, warning=F, error=F, message=F, echo = F}
-leveneTest(medn_score ~ g1classtype * as.factor(g1surban) * as.factor(g1schid), STARt)
+leveneTest(medn_score ~ g1classtype * g1surban, center = median, data = STARt) #P < 0.5 = unequal variance
 ```
 
-## Independence
+### Independence
 
 Unfortunately because we are only involved in analyzing the data and not
 designing the experiment we must trust in how the Tennessee general
@@ -716,7 +752,7 @@ assignment of class type to each class. Any correlation that might be
 present among students of the same teacher has also been eliminated by
 the use of our median summary statistic.
 
-## Cook's Distance: Influential Points & Outliers
+### Cook's Distance: Influential Points & Outliers
 
 Using Cook's distance one can look for outliers and influential points
 that might effect our model. The following plot, Figure 12, indicates
@@ -730,61 +766,17 @@ deal with influential points or outliers.
 par(mfrow = c(1,2))
 plot(STAR_medn_aov, which = 4)
 plot(STAR_medn_aov, which = 5)
+
+ckd = cooks.distance(STAR_medn_aov)
+
+influential <- as.numeric(names(ckd)[(ckd > 1)])
+influential = influential[!is.na(influential)]
+
 ```
 
-## Unequal Medians: Kruskal Wallis Test
+## Sensitivity of Model
 
-~~Using the Kruskal-Wallis test at significance level 0.05 we can test
-the following hypothesis:~~
-
-$$ 
-H_0: \text{Medians between all groups are equal.} \\ H_1: \text{Not all medians are equal.}
-$$
-
-~~We perform the Kurskal-Wallis test for both class type and school
-type. For the class type compared to the median score we obtained a
-significant p-value of 0.00117. For the urbanicity compared to the
-median score we obtained a significant p-value of 8.091e-13. Thus we
-found among class types there is a significant difference in the
-difference between the three class types. Similarly a significant
-difference was found between the medians of the various types of
-schools.~~
-
-```{r, warning=F, error=F, message=F, echo = F}
-#H0: The medians of all groups are equal
-kruskal.test(medn_score ~ g1classtype, data = STARt)
-
-kruskal.test(medn_score ~ g1surban, data = STARt)
-
-kruskal.test(medn_score ~ as.factor(g1schid), data = STARt)
-```
-
-## Dunn Test
-
-~~Because we have broken away from our normality assumption (see
-Sensitivity Analysis, Figure 10) and the Kruskal-Wallis rank sum test
-has been reject we will perform a Dunn test at significance level~~
-$\alpha=0.05$~~. A Dunn test is used when we have found indication that
-there is a difference between one or more groups, as noted in the
-previous Kruskal-Wallis test. This test we are performing will allow us
-to pinpoint if any particular groups have a higher effect on median math
-scores than another. The Dunn test is of use here due the departure from
-normality experienced from our model, as the Dunn test is a non
-parametric test.~~
-
-~~We will test the following hypothesis:~~
-
-$$ H_0: \text{There is no difference in median math scores between class types} \\ H_1: \text{There is a difference in median math scores between class types} $$
-
-~~Based on our results we can see that small classes in comparison to
-regular classes and regular + aide classes have a higher average median
-score. No strong distinction between regular classes and regular + aide
-classes can be made due to the high p-value.~~
-
-```{r, warning=F, error=F, message=F, echo = F}
-dnn_test = dunnTest(medn_score ~ g1classtype, "bonferroni", data = STARt)
-dnn_test
-```
+[Perform sensitivity]
 
 # Discussion
 
@@ -795,51 +787,50 @@ teacher to avoid issues of correlation. We fit a fixed effect model,
 using a variety of parametric and non-parametric tools to examine the
 data.
 
+## Study Conclusions
+
 With this work we have concluded that both class type and school
 urbanicity have statistically significant main effects on the median 1st
-grade math test scores of students. As well we can conclude that the
-median 1st grade score of students taught in a small classroom setting
-score higher on the math tests than students taught in other classroom
-sizes.
+grade math test scores of students. Because the model contains an
+interaction term we can also conclude that the effects of class size and
+urbanicity can come together to have a greater or lesser effect on a
+given treatment, that is certain combinations of factors may lead to
+different results.
 
-It seems intuitive that with more individual attention a student has a
-better potential to learn. Further analysis could be performed on the
-size of the class size, perhaps by finding if smaller classroom sizes
-continue to show improvement as class size shrinks or if at some point a
-small class becomes detrimental. This may have issues being performed,
-as an extremely small classroom deviates from normal class sizes which
-may be harmful on education of students, something that the original
-STAR investigation wished to avoid. Perhaps instead an investigation
-could examine if the presence of additional teacher aides, and thus a
-lower educator to student ration, could lead to better test scores.
+Regarding our secondary question we can conclude that the median 1st
+grade score of students taught in a small classroom setting score higher
+on the math tests than students taught in regular size classrooms. No
+comparison can be made between regular classrooms and regular classrooms
+with an aide. Similarly no comparison can be made between small
+classrooms and regular classrooms with an aide. Because of this we
+cannot say that a small classroom has a definitively better performance
+than all other classrooms in this study.
+
+## Limitations and Challenges
 
 It should be noted that while this investigation attempted to be robust
 in dealing with issues of non-normality of the model, such an issue does
-deviate from traditional testing methods. The non-parametric tests
-employed do attempt to correct this, though it should be noted that the
-Dunn test is especially conservative. Similarly while the work of Glass
-et al. indicate that a skewness in the normality of the model should
-have little effect on the F-test, they do not state there is no effect.
-By taking into account this study and using it hand in hand with non
-parametric models that reach the same conclusions we have hoped to
-mitigate any issues that any individual test might hold.
+deviate from traditional testing methods. While the work of Glass et al.
+indicate that a skewness in the normality of the model should have
+little effect on the F-test, they do not state there is no effect.
 
-It should also be noted that this investigation solely focused on the
-math test scores of the first grade, with little consideration for any
-other factors beyond the teacher and school setting of these students.
-No examination of how these students performed in kindergarten is taken
-into considering, nor even is the first grade test score looked at. Such
-a narrow scope allows for a more targeted study, however stating that a
-smaller classroom leads to higher overall academic performance is not
-something this particular investigation can claim.
+[Issues with STAR design]
 
-The STAR program's investigation into classroom size on educational
+[Issues with how I trimmed the data]
+
+[Restate Urbanicity]
+
+[Sensitivity Testing]
+
+## Closing Remarks
+
+~~The STAR program's investigation into classroom size on educational
 performance has allowed for a deep insight into the relationship between
 these factors. The particular study we performed indicated that
 classroom size and school setting had an impact on the first grade math
 scores of students in Tennessee. With this study school administration
 can work to adjust their schools to better the education of their
-pupils, allowing for a brighter and more educated future generation.
+pupils, allowing for a brighter and more educated future generation.~~
 
 # Acknowledgement {.unnumbered}
 
@@ -866,6 +857,13 @@ Tim. (2022, December 12). *Dunn’s test: Definition*. Statistics How To.
 <https://www.statisticshowto.com/dunns-test/>
 
 <https://stackoverflow.com/questions/66951931/ordering-boxplots-based-on-two-factor-variables-in-x-axis-with-ggplot2>
+
+<https://stats.stackexchange.com/questions/164099/removing-outliers-based-on-cooks-distance-in-r-language>
+
+John Folger & Carolyn Breda (1989) Evidence from project star about
+class size and student achievement, Peabody Journal of Education, 67:1,
+17-33, DOI: 10.1080/01619569209538668,
+<https://doi.org/10.1080/01619569209538668>
 
 # Session info {.unnumbered}
 
