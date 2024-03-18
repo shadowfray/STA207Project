@@ -591,8 +591,8 @@ median math score per teacher as our response variable.
 
 ### Model Assumptions
 
-An imbalanced fixed effect model was chosen to be fit to our data, with
-the following equations:
+An imbalanced type II fixed effect ANOVA model was chosen to be fit to
+our data, with the following equations:
 
 $$
 Y_{ijk} = \mu_{..} + \alpha_i + \beta_j + \epsilon_{ijk} \\
@@ -644,11 +644,13 @@ H_0: (\alpha\beta)_{ij} = 0 \\
 H_1: \text{not all } (\alpha\beta)_{ij} \text{ are zero.}
 $$
 
-Via the F-test we report a p-value of 0.22, indicating that we reject
-the null hypothesis. As such there is nointeraction between classroom
-type and school urbanicity. That is, school urbanicity and class size
-cannot work together under certain combinations to have unique effects
-on math scores.
+Across all three types of ANOVA models we can report that the
+interaction is not significant, each with p-values of 0.22, plus or
+minus a few thousandths. This indicates that we reject our null
+hypothesis. As such there is no interaction between classroom type and
+school urbanicity. That is, school urbanicity and class size cannot work
+together under certain combinations to have unique effects on math
+scores.
 
 Because of the results of these tests we will not be including an
 interaction term in our model. It should be noted that the residuals of
@@ -656,23 +658,27 @@ the interaction model are not normal, but further discussion of this
 deviation will be conducted in the sensitivity section.
 
 ```{r, warning=F, error=F, message=F, echo = F, results = 'hide', fig.keep='all'}
+star_lm = lm(medn_score ~ g1classtype * g1surban, data = STARt)
 
-STARaov.m1 = aov(medn_score ~ g1classtype * g1surban, data = STARt)
-STARaov.m2 = aov(medn_score ~ g1classtype + g1surban, data = STARt)
-STARaov.m3 = aov(medn_score ~ g1schid, data = STARt)
+STARaov.m2 = Anova(star_lm, type = 2)
+STARaov.m3 = Anova(star_lm, 
+                   contrasts=list(g1classtype=contr.sum, g1surban=contr.sum),
+                   type = 3)
+
+summary(aov(star_lm))
+STARaov.m2
+STARaov.m3
 
 #Pr > 0.05, Use simpler model
 # Pr < 0.05, Use more complex model
 
-anova(STARaov.m1, STARaov.m2) 
-anova(STARaov.m2, STARaov.m3) 
 
 #Double checking interaction
 summary(aov(medn_score ~ g1classtype * g1surban, data = STARt))
 
 #Our final model
-STAR_medn_aov = aov(medn_score ~ g1classtype + g1surban, data = STARt)
-summary(STAR_medn_aov)
+STAR_medn_aov = lm(medn_score ~ g1classtype + g1surban, data = STARt)
+
 ```
 
 ## Effects Plots & Interaction Plot
@@ -864,13 +870,15 @@ g1dat = STAR_g1 %>%
   drop_na(g1tmathss) %>%
   summarize(medn_score = median(g1tmathss, na.rm = T))
 
-g1urb_model = aov(medn_score ~ g1classtype + g1surban, g1dat)
-summary(g1urb_model)
+g1urb_model = lm(medn_score ~ g1classtype + g1surban, g1dat)
+
 hist(residuals(g1urb_model), 
      xlab = 'Residuals',
      main = 'Figure XX: Residuals of First Grade STAR')
 shapiro.test(residuals(g1urb_model))
 leveneTest(medn_score ~ g1classtype * g1surban, g1dat)
+
+Anova(g1urb_model, type = 2)
 ```
 
 In examining the model on this data we perform a Shapiro-Wilks test for
@@ -880,6 +888,11 @@ have a right skewed distribution. Thus as per the advice of Glass et al.
 (1972), the F-test is particularly robust against such deviations. To
 confirm our equal variance assumption is met a Levene Test is performed,
 with a p-value of 0.59, indicating no departure from this assumption.
+
+As with our primary model, under these conditions this type 2 imbalanced
+ANOVA model agrees with our earlier conclusions that both class type and
+urbanicity are significant. Both class type and urbanicity report a
+p-value less than 0.01, meaning we reject our null hypothesis.
 
 It appears that our model continues to focus when faced with a greater
 scope of the STAR project data. It should be noted with greater data
