@@ -226,7 +226,7 @@ g1smath_stats = data.frame(
 
 colnames(g1smath_stats) = c('Mean', 'Standard Deviation', 'Q25%', 'Q50%', 'Q75%', 'Total Missing', 'Total Data')
 rownames(g1smath_stats) = c('')
-kable(g1smath_stats, caption = 'Table XX: Summary statistics of 1st grade math scores')
+kable(g1smath_stats, caption = 'Table 1: Summary statistics of 1st grade math scores')
 
 ```
 
@@ -241,7 +241,7 @@ first grade. By removing these non-STAR students from our data, we can
 find that this reduces the number of missing values to 3.38% (256
 students), a much smaller proportion of the data.
 
-```{r, warning=F, error=F, message=F, echo = F}
+```{r, warning=F, error=F, message=F, echo = F, results = 'hide', fig.keep='all'}
 #How many math scores are NA out of the total?
 tot_raw_na = sum(is.na(STAR$g1tmathss)) / length(STAR$g1tmathss) #BAD!
 
@@ -267,14 +267,14 @@ ggplot(tot_star_df, aes(x="", y=perc, fill = group)) +
   geom_bar(stat = "identity", width = 1) +
   coord_polar("y", start=0) +
   xlab('') + ylab('') +
-  ggtitle('Figure XX: Proportion of Missing First Grade Math Scores') +
+  ggtitle('Figure 1: Proportion of Missing First Grade Math Scores') +
   scale_fill_manual(values=c("#5ba300", "#0073e6", "#b51963"))
 
 #Table of values
 na_df = data.frame(c(tot_raw_na, tot_star_na))
 colnames(na_df) = c('Percent')
 rownames(na_df) = c('Percentage of Missing Math Values', 'Percentage of missing Math values of enrolled stuents')
-kable(na_df, caption = 'Table XX: Missing Values for STAR and non-STAR students')
+kable(na_df, caption = 'Table 2: Missing Values for STAR and non-STAR students')
 ```
 
 ### Class Size Inconsistencies
@@ -290,7 +290,7 @@ regular. To ensure that proper adherence to the experimental design is
 met those classes that fail to adhere to their initial definition will
 be removed from our investigation.
 
-```{r, warning=F, error=F, message=F, echo = F}
+```{r, warning=F, error=F, message=F, echo = F, results = 'hide', fig.keep='all'}
 STARsmall = filter(STAR, (g1classtype == 'SMALL CLASS' & g1classsize %in% 13:17))
 STARreg = filter(STAR, (g1classtype != 'SMALL CLASS' & g1classsize %in% 22:25))
 
@@ -334,10 +334,10 @@ STARc = filter(STARc, g1classtype == gkclasstype)
 In setting caveats for our investigation, we see that this resulted in
 the side effect of cutting down the vast majority of missing values from
 our first grade math scores. Where before 43.13% of our data points were
-missing values (Table XX), we have reduced the number of missing points
+missing values (Table 2), we have reduced the number of missing points
 down to just 1.5% of our data. This is half the number of missing data
 points we achieve by only including students enrolled in the STAR
-program in first grade. As seen in Figure AA, few schools are missing
+program in first grade. As seen in Figure 2, few schools are missing
 more than one value, with the most missing values in a single school
 being four values.
 
@@ -359,7 +359,7 @@ na_star = STARc %>%
 #Histogram of missing values
 hist(na_star$na_count[which(is.na(na_star$g1tmathss))], breaks = 1:30,
      xlab = 'Frequecy of NA values',
-     main = 'Figure AA: Frequency of missing values among Schools')
+     main = 'Figure 2: Frequency of missing values among Schools')
 
 ```
 
@@ -403,7 +403,7 @@ STARt$g1classtype = revalue(STARt$g1classtype, c('REGULAR + AIDE CLASS' = 'REGUL
 
 Examining the new median statistic score per teacher we can find that
 there is a median score of 536.5, a standard deviation of 31.11, a lower
-quartile of 515 and upper quartile of 557. As seen in Figure 2 the
+quartile of 515 and upper quartile of 557. As seen in Figure 3 the
 median math score per teacher is somewhat normally distributed, but
 appears to have a heavy tail.
 
@@ -416,23 +416,24 @@ teacher_dat = data.frame(c(mean(STARt$medn_score),
   q75 = quantile(STARt$medn_score, probs = 0.75, na.rm = T))) #75th quantile
 colnames(teacher_dat) = c('Median Test Scores per Teacher')
 rownames(teacher_dat) = c('Mean', 'Std Dev', 'Q25%', 'Q50%', 'Q75%')
-kable(teacher_dat, caption = 'Table 4: Summary Statistics for Median Scores per Teacher')
+kable(teacher_dat, caption = 'Table 3: Summary Statistics for Median Scores per Teacher')
 
 #Histogram of median math scores per teacher
 ggplot(data = STARt, aes(medn_score)) +
   geom_histogram(bins = 30) +
   xlab('Mean Math Scores per Teacher') +
-  ggtitle('Figure 2: Histogram of Median Math Scores per Teacher')
+  ggtitle('Figure 3: Histogram of Median Math Scores per Teacher')
 ```
 
 ### Class Types: Summary Statistics
 
 Examining the statistics of various class types we can see in the
 boxplot comparison small classes have higher medians and quartiles
-compared to the other two class types (Figure XX). Actual testing will
-need to be performed to confirm this visual inspection. The various
-summary statistics for each class type can be seen in Table 5, which
-supports our visual inspection of the boxplots.
+compared to regular classes, but potentially equal medians to regular
+classes with aides (Figure 4). Obviously actual testing will need to be
+performed to confirm this visual inspection. The various summary
+statistics for each class type can be seen in Table 4, which supports
+our visual inspection of the boxplots.
 
 ```{r, warning=F, error=F, message=F, echo = F}
 #Statistics for `small` classes
@@ -460,22 +461,22 @@ classdat_df = data.frame(small_class_stats, reg_class_stats, rgaide_class_stats)
 colnames(classdat_df) = c('Small Class', 'Regular Class', 'Regular + Aide Class')
 rownames(classdat_df) = c('Mean', 'Std Dev', 'Q25%', 'Q50%', 'Q75%')
 
-kable(classdat_df, caption = 'Table XX: Summary Statistics per Class Size')
+kable(classdat_df, caption = 'Table 4: Summary Statistics per Class Size')
 
 ggplot(data = STARt, aes(g1classtype, medn_score)) + 
   geom_boxplot() +
   xlab('Class Type') +
   ylab('Average Test score Year 1') +
-  ggtitle('Figure XX: Median combined test Score per class type')
+  ggtitle('Figure 4: Median combined test Score per class type')
 ```
 
 ### School Urbanicity: Summary Statistics
 
 Below we can see the summary statistics for the urbanicity of each
-school can be seen in Table XX. As seen in Figure XX we have compared
-the median math scores per individual school, with coloring per school
-urbanicity to differentiate between them. Figure XX displays a boxplot
-of median math scores per urbanicity level, where we can see that inner
+school can be seen in Table 5. As seen in Figure 5 we have compared the
+median math scores per individual school, with coloring per school
+urbanicity to differentiate between them. Figure 6 displays a boxplot of
+median math scores per urbanicity level, where we can see that inner
 city schools have lower medians than the other three settings which are
 approximately equal.
 
@@ -501,7 +502,7 @@ school_setting_df = data.frame(inner_city_dat,
                                )
 colnames(school_setting_df) = c('Inner City', 'Suburban', 'Rural', 'Urban')
 rownames(school_setting_df) = c('Mean', 'Std Dev', 'Q25%', 'Q50%', 'Q75%')
-kable(school_setting_df, caption = 'Table XX: Summary Statistics per School Setting')
+kable(school_setting_df, caption = 'Table 5: Summary Statistics per School Setting')
 
 sortedSTAR = STARt[order(STARt$g1surban), ]
 lvlinfo = sortedSTAR %>% 
@@ -516,22 +517,15 @@ STARt %>%
   geom_boxplot() +
   xlab('') +
   ylab('') +
-  ggtitle('Figure XX: Median Score between Schools') +
+  ggtitle('Figure 5: Median Score between Schools') +
   theme(axis.text.x = element_blank())
-  
-#Boxplot of median score per school
-#ggplot(data = sortedSTAR, aes(x = reorder(g1schid, g1surban),, y = medn_score, #color = g1surban)) + 
-#  geom_boxplot() + 
-#  xlab('1st grade School') +
-#  ylab('Average Test score Year 1') +
-#  ggtitle('Figure 4: Median Combined Test Score per School Year 1') 
 
 #Boxplot of median score per school setting
 ggplot(data = STARt, aes(g1surban, medn_score, color = g1surban)) + 
   geom_boxplot() + 
   xlab('First grade School') +
   ylab('Average Test score Year 1') +
-  ggtitle('Figure XX: Median combined 1st grade test score by urbanicity')
+  ggtitle('Figure 6: Median combined 1st grade test score by urbanicity')
 ```
 
 ### Examining distribution of Urbanicity and Schools
@@ -543,10 +537,10 @@ should ensure that there is enough data to move forward. Below two plots
 have been made to highlight the portion of students in each treatment
 when using school ID compared to urbanicity as our variable to represent
 location. As we can see not all levels of class size can be found in
-each school (Figure XY). Comparatively when representing school location
+each school (Figure 7). Comparatively when representing school location
 by urbanicity we have a minimum of five units per treatment, though it
 should be noted that there is much higher proportion of rural classes
-(Figure XZ).
+(Figure 8).
 
 ```{r, warning=F, error=F, message=F, echo = F}
 class_schid_tbl = as.data.frame(table(STARt$g1classtype, STARt$g1schid))
@@ -556,7 +550,7 @@ ggplot(class_schid_tbl, aes(x = Var2, y = Freq, fill = Var1)) +
   geom_bar(stat = "identity") +
   xlab('Invidual Schools') +
   ylab('') +
-  ggtitle('Figure XY:Treatments of School ID and Class Size') +
+  ggtitle('Figure 7:Treatments of School ID and Class Size') +
   scale_fill_manual(values=c("#bae4bc", "#7bccc4", "#43a2ca")) +
   theme(axis.text.x = element_blank()) 
 
@@ -566,7 +560,7 @@ ggplot(class_urb_tbl, aes(x = Var2, y = Freq, fill = Var1)) +
   geom_bar(stat = "identity") +
   xlab('Invidual Schools') +
   ylab('') +
-  ggtitle('Figure XZ: Treatments of Urbanicity and Class Size') +
+  ggtitle('Figure 8: Treatments of Urbanicity and Class Size') +
   scale_fill_manual(values=c("#bae4bc", "#7bccc4", "#43a2ca")) +
   theme_minimal() 
 ```
@@ -576,18 +570,20 @@ ggplot(class_urb_tbl, aes(x = Var2, y = Freq, fill = Var1)) +
 ## Modeling
 
 Our initial analysis report was directed to use a model that accounted
-for class type and individual schools. However, we have seen (Figure XX)
-that to ensure that all treatments are represented in our model,
-urbanicity will need to surplant the use of school ID. Because each
-school belongs to a single type of urbanicity there exists a straight
-forward mapping between individual schools and the level of their
-urbanicity. Using the urbanicity of the school, readers of this report
-may be able to gauge how effective class size can be for their specific
-school.
+for class type and individual schools. However, we have seen (Figure 7,
+Figure 8) that to ensure that all treatments are represented in our
+model, urbanicity will need to surplant the use of school ID. Because
+each school belongs to a single type of urbanicity there exists a
+straight forward mapping between individual schools and the level of
+their urbanicity. Using the urbanicity of the school, readers of this
+report may be able to gauge how effective class size can be for their
+specific school.
 
 We will be fitting a fixed effect model for the data given, using the
 class type and school urbanicity as our independent variables and the
-median math score per teacher as our response variable.
+median math score per teacher as our response variable. Due to the fact
+that there is an imbalanced number of observations per treatment we will
+choose a type II model.
 
 ### Model Assumptions
 
@@ -684,24 +680,23 @@ STAR_medn_aov = lm(medn_score ~ g1classtype + g1surban, data = STARt)
 ## Effects Plots & Interaction Plot
 
 An investigation into the effects leads to examining the main effects
-plot. The main effects of class type can be seen in Figure XX, where it
+plot. The main effects of class type can be seen in Figure 9, where it
 appears that a smaller class type has a strong effect on median math
-score compared to the other two class types, further supporting our
-suspicions drawn from the boxplots earlier (Figure XX). This will be of
-particular note when answering our secondary question below. In Figure
-XX we can see the main effects of the school setting, with a Inner City
-schools having a significant decrease in median math scores compared to
-the other school locations. Finally an interaction plot is constructed
-(Figure XX), allowing us to see that there is little interaction between
-school setting and class type, as our F-test previously confirmed.
+score compared regular classes, further supporting our suspicions drawn
+from the boxplots earlier (Figure 4). This will be of particular note
+when answering our secondary question below. In Figure 10 we can see the
+main effects of the school setting, with a Inner City schools having a
+significant decrease in median math scores compared to the other school
+locations.
 
 ```{r, warning=F, error=F, message=F, echo = F}
 #Effects & Interaction Plots
 plotmeans(medn_score ~ g1classtype, data = STARt,
-          main = 'Figure XX: Main Effects of Class Type')
+          main = 'Figure 9: Main Effects of Class Type')
 
 plotmeans(medn_score ~ g1surban, data = STARt, 
-          main = 'Figure XX: Main Effects of School Setting')
+          main = 'Figure 10: Main Effects of School Setting')
+
 ```
 
 ## Secondary Question of Interest:
@@ -757,10 +752,10 @@ not deviate away from them.
 ### Normality in Residuals
 
 One assumption of particular note here is that of normality. In
-examining our residuals vs fitted plot (figure XX) we can see that there
+examining our residuals vs fitted plot (Figure 11) we can see that there
 is little pattern to the data points, indicating no major issues with
 variance or mean. In examining our residuals via histogram and qqplot
-(Figure XX, Figure XX), there is little indication of non-normality, and
+(Figure 12, Figure 13), there is little indication of non-normality, and
 this is confirmed with a Shapiro-Wilk normality test at $\alpha = 0.05$.
 With a p-value of 0.08 reported, we fail to reject our null hypothesis
 that our data is normal.
@@ -773,28 +768,33 @@ interaction term via the F-test is value. However, as stated in Glass et
 al. (1972) "Skewed populations have very little effect on either the
 level of significance or the power of the fixed-effects model F-test".
 This skewness of the residuals in the interaction model can be seen in
-Figure XY, which is slightly skewed right. Because this skewness is not
+Figure 14, which is slightly skewed right. Because this skewness is not
 particularly strong we can move forward knowing this departure of
 normality will not strong effect our F-tests.
 
 ```{r, warning=F, error=F, message=F, echo = F, results = 'hide', fig.keep='all'}
 plot(STAR_medn_aov$fitted.values, STAR_medn_aov$residuals, 
      xlab = 'Fitted Values',
-     main = 'Figure XX: Median Model Residuals vs Fitted plot')
+     main = 'Figure 11: Median Model Residuals vs Fitted plot')
 
 ggplot(data = STAR_medn_aov, aes(sample = residuals(STAR_medn_aov))) +
   stat_qq() +
   stat_qq_line() +
-  ggtitle('Figure XX: QQplot of Median Model')
+  ggtitle('Figure 12: QQplot of Median Model')
 
 
-hist(residuals(STAR_medn_aov), main = 'Figure XX: Histogram of Median Model Residuals', xlab = 'Residuals')
+hist(residuals(STAR_medn_aov), 
+     main = 'Figure 13: Histogram of Median Model Residuals', 
+     xlab = 'Residuals')
 
 shapiro.test(residuals(STAR_medn_aov)) #P > 0.05 = Normality
 
 #Interaction model shapiro
 shapiro.test(residuals(aov(medn_score ~ g1classtype * g1surban, data = STARt)))
-hist(residuals(aov(medn_score ~ g1classtype * g1surban, data = STARt)), main = 'Figure XY: Histogram of Interaction Model', xlab = 'Residuals')
+
+hist(residuals(aov(medn_score ~ g1classtype * g1surban, data = STARt)), 
+     main = 'Figure 14: Histogram of Interaction Model', 
+     xlab = 'Residuals')
 ```
 
 ### Levene Test for Equal Variance
@@ -832,7 +832,7 @@ the use of our median summary statistic.
 ### Cook's Distance: Influential Points & Outliers
 
 Using Cook's distance one can look for outliers and influential points
-that might effect our model. The following plot, Figure 12, indicates
+that might effect our model. The following plot, Figure 15, indicates
 that there are few points that differ from the major of values. Those
 few values that have a large Cook's distance compared to the rest of the
 data set have values so small they don't approach being influential,
@@ -841,14 +841,13 @@ deal with influential points or outliers.
 
 ```{r, warning=F, error=F, message=F, echo = F}
 par(mfrow = c(1,2))
-plot(STAR_medn_aov, which = 4)
-plot(STAR_medn_aov, which = 5)
+plot(STAR_medn_aov, which = 4, main = "Figure 15:")
+plot(STAR_medn_aov, which = 5, main = 'Figure 16:')
 
 ckd = cooks.distance(STAR_medn_aov)
 
 influential <- as.numeric(names(ckd)[(ckd > 1)])
 influential = influential[!is.na(influential)]
-
 ```
 
 ## Sensitivity of Model
@@ -874,7 +873,7 @@ g1urb_model = lm(medn_score ~ g1classtype + g1surban, g1dat)
 
 hist(residuals(g1urb_model), 
      xlab = 'Residuals',
-     main = 'Figure XX: Residuals of First Grade STAR')
+     main = 'Figure 17: Residuals of First Grade STAR')
 shapiro.test(residuals(g1urb_model))
 leveneTest(medn_score ~ g1classtype * g1surban, g1dat)
 
@@ -883,7 +882,7 @@ Anova(g1urb_model, type = 2)
 
 In examining the model on this data we perform a Shapiro-Wilks test for
 normality, reporting a p-value of 0.3, which indicates a deviation from
-our normality assumption. However as seen in Figure XX we once again
+our normality assumption. However as seen in Figure 17 we once again
 have a right skewed distribution. Thus as per the advice of Glass et al.
 (1972), the F-test is particularly robust against such deviations. To
 confirm our equal variance assumption is met a Levene Test is performed,
@@ -945,6 +944,44 @@ g1sch_model = aov(medn_score ~ g1classtype + g1schid, g1dat)
 summary(g1sch_model)
 shapiro.test(residuals(g1sch_model))
 leveneTest(medn_score ~ g1classtype * g1schid, g1dat)
+```
+
+### Non-Parametric Class Type Comparison
+
+To test our question regarding if any class size performs better than
+others we had previously employed the Tukey Range test. To further
+investigate this question however we will turn to another tool, the Dunn
+test. This test is a non-parametric test, meaning that no assumptions
+are made about the distributions of our data. The Dunn test will check
+if there are any differences in the medians between each group, using
+the t-test to do so. In particular it will use the follow null and
+alternate hypothesis at $\alpha = 0.05$:
+
+$$
+H_0: \text{There is no difference in median math scores between class types} \\H_1: \text{There is a difference in median math scores between class types}
+$$
+
+For the difference between regular classes and regular classes with aide
+we report a p-value of 0.046, indicating the median math scores of
+regular classes with an aide is higher than those of a regular class.
+When comparing regular classes and small classes a p-value of less than
+0.01 is reported, indicating that the median math scores of small
+classes is higher than those of regular classes. Finally, in comparing
+regular classes with an aide to small classes a p-value of 0.23 is
+reported, indicating there is no difference in median math scores
+between these two class types.
+
+When our comparison is done in a non-parametric form slightly different
+results are revealed, that regular classes with aides have higher median
+scores than regular classes. It should be noted that the Dunn test works
+specifically for the median, while the Tukey range test measures via the
+mean. This could be the result of the discrepancy. Under this
+non-parametric test we can say that regular classes are out performed by
+both of class types in the STAR project.
+
+```{r, results = 'hide', fig.keep='all'}
+dnn_test = dunnTest(medn_score ~ g1classtype, "bonferroni", data = STARt)
+dnn_test
 ```
 
 # Discussion
@@ -1031,6 +1068,31 @@ inner city different than the other three school settings. All
 definitions are ultimately human made, however the use of urbanicity
 would likely be strengthened if all four levels were instead tied to
 economic status.
+
+## Future Applications
+
+Future investigation into this subject is recommended so that a stronger
+conclusion can be reached regarding how to improve the mathematical
+understanding of first graders. To begin simply adding more students to
+the study would alleviate our need to use urbanicity over individual
+schools, allowing for a closer examination. Similarly ensuring that
+enough students are retained to allow for a balanced design will lead to
+more robust models, allowing for stronger statements to be made
+regarding the results of the study. Finally, simply performing the
+experiment again today would likely lead to a better data set due to the
+requirements for students to attend first grade. Together these changes
+could lead to a more robust experiment and data set, allowing for
+investigators to make stronger and broader conclusions about how to
+improve schools for first grade learning.
+
+Due to the fact that this study indicates that class size and urbanicity
+of a school do impact the first grade math scores, it would be advisable
+for school administration to consider impliment changes similar to the
+STAR project. As we have shown that small classes perform better than
+regular classes, the implementation of small classes can lead to
+students performing better in mathematics. If we are to consider the
+results of our non-parametric test as well, then adding teacher aides to
+regular classes can also lead to stronger mathematics in first graders.
 
 ## Closing Remarks
 
