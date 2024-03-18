@@ -290,7 +290,7 @@ regular. To ensure that proper adherence to the experimental design is
 met those classes that fail to adhere to their initial definition will
 be removed from our investigation.
 
-```{r, warning=F, error=F, message=F, echo = F, include = F}
+```{r, warning=F, error=F, message=F, echo = F}
 STARsmall = filter(STAR, (g1classtype == 'SMALL CLASS' & g1classsize %in% 13:17))
 STARreg = filter(STAR, (g1classtype != 'SMALL CLASS' & g1classsize %in% 22:25))
 
@@ -393,6 +393,10 @@ minicdat = STARc %>%
 
 STARt$g1schid = as.factor(STARt$g1schid)
 STARt$g1tchid = as.factor(STARt$g1tchid)
+
+#Drop the `+` sign from regular aide class so it can be used with car::Anova
+library(plyr, include.only = ('revalue'))
+STARt$g1classtype = revalue(STARt$g1classtype, c('REGULAR + AIDE CLASS' = 'REGULAR AIDE CLASS'))
 ```
 
 ### Median Math Score: Summary Statistics
@@ -1038,7 +1042,7 @@ the median math scores of their class in first grade. Among these
 classes, we can conclude that those students that are in small classes
 will score higher than those in regular classes.
 
-# Conclusion 
+# Conclusion
 
 The STAR program's investigation into classroom size on educational
 performance has give us insight into the relationship between these
