@@ -451,11 +451,11 @@ reg_class_stats = c(mean(STARt$medn_score[STARt$g1classtype %in% 'REGULAR CLASS'
   q75 = quantile(STARt$medn_score[STARt$g1classtype %in% 'REGULAR CLASS'], probs = 0.75, na.rm = T)) #75th quantile 
 
 #Statistics for `regular+aide` classes
-rgaide_class_stats = c(mean(STARt$medn_score[STARt$g1classtype %in% 'REGULAR + AIDE CLASS']), 
-  sd(STARt$medn_score[STARt$g1classtype %in% 'REGULAR + AIDE CLASS'], na.rm = T), 
-  q25 = quantile(STARt$medn_score[STARt$g1classtype %in% 'REGULAR + AIDE CLASS'], probs = 0.25, na.rm = T), #25th quantile 
-  q50 = quantile(STARt$medn_score[STARt$g1classtype %in% 'REGULAR + AIDE CLASS'], probs = 0.50, na.rm = T), #50th quantile 
-  q75 = quantile(STARt$medn_score[STARt$g1classtype %in% 'REGULAR + AIDE CLASS'], probs = 0.75, na.rm = T)) #75th quantile 
+rgaide_class_stats = c(mean(STARt$medn_score[STARt$g1classtype %in% 'REGULAR AIDE CLASS']), 
+  sd(STARt$medn_score[STARt$g1classtype %in% 'REGULAR AIDE CLASS'], na.rm = T), 
+  q25 = quantile(STARt$medn_score[STARt$g1classtype %in% 'REGULAR AIDE CLASS'], probs = 0.25, na.rm = T), #25th quantile 
+  q50 = quantile(STARt$medn_score[STARt$g1classtype %in% 'REGULAR AIDE CLASS'], probs = 0.50, na.rm = T), #50th quantile 
+  q75 = quantile(STARt$medn_score[STARt$g1classtype %in% 'REGULAR AIDE CLASS'], probs = 0.75, na.rm = T)) #75th quantile 
 
 classdat_df = data.frame(small_class_stats, reg_class_stats, rgaide_class_stats)
 colnames(classdat_df) = c('Small Class', 'Regular Class', 'Regular + Aide Class')
@@ -732,15 +732,16 @@ shapiro.test(minicdat$medn_score[which(minicdat$g1classtype  == 'REGULAR + AIDE 
 In examining the difference in mean between regular classes and small
 classes with a p-value less than 0.01 there was a negative difference in
 means, indicating we reject our null hypothesis. Between regular classes
-and small classes a p-value of 0.39 was reported, while between
-regular + aide and regular classes there was a p-value of 0.11. Thus in
-both these cases we fail to reject our null hypothesis.
+and small classes a p-value of 0.39 was reported, while between regular
+classes with aides and regular classes there was a p-value of 0.11. Thus
+in both these cases we fail to reject our null hypothesis.
 
 Among students that participated in the same classroom setting both
 years, students who are a part of smaller classes have higher first
 grade math scores than those in a regular setting. Due to a lack of
-significance no comparison can be made between regular and regular +
-aide classes or between small classes and regular + aide classes.
+significance no comparison can be made between regular and regular
+classes with aides or between small classes and regular classes with
+aides.
 
 # Sensitivity analysis
 
@@ -979,7 +980,7 @@ mean. This could be the result of the discrepancy. Under this
 non-parametric test we can say that regular classes are out performed by
 both of class types in the STAR project.
 
-```{r, results = 'hide', fig.keep='all'}
+```{r, warning=F, error=F, message=F, echo = F,results = 'hide', fig.keep='all'}
 dnn_test = dunnTest(medn_score ~ g1classtype, "bonferroni", data = STARt)
 dnn_test
 ```
@@ -1075,15 +1076,14 @@ Future investigation into this subject is recommended so that a stronger
 conclusion can be reached regarding how to improve the mathematical
 understanding of first graders. To begin simply adding more students to
 the study would alleviate our need to use urbanicity over individual
-schools, allowing for a closer examination. Similarly ensuring that
+schools, allowing for a closer examination. Similarly, ensuring that
 enough students are retained to allow for a balanced design will lead to
-more robust models, allowing for stronger statements to be made
-regarding the results of the study. Finally, simply performing the
-experiment again today would likely lead to a better data set due to the
-requirements for students to attend first grade. Together these changes
-could lead to a more robust experiment and data set, allowing for
-investigators to make stronger and broader conclusions about how to
-improve schools for first grade learning.
+more robust models. Finally, simply performing the experiment again
+today would likely lead to a better data set due to the requirements for
+students to attend kindergaten. Together these changes could lead to a
+more robust experiment and data set, allowing for investigators to make
+stronger and broader conclusions about how to improve schools for first
+grade learning.
 
 Due to the fact that this study indicates that class size and urbanicity
 of a school do impact the first grade math scores, it would be advisable
@@ -1129,8 +1129,11 @@ allowing for a brighter and more educated future generation.
 
 # Acknowledgement {.unnumbered}
 
-A special thanks to the following individuals: Sara A, Leena Q, Ian D,
-Jaehwan K, Lubaba A, Patrick, Jack
+Thank you to the following classmates: Sara A, Leena Q, Ian D, Jaehwan
+K, Lubaba A, Patrick, Jack
+
+A special thank you to Sara A, the STA 104 TA under Dr Andrew Farris,
+for assistance in understanding non-parametric models.
 
 # Reference {.unnumbered}
 
